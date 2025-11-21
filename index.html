@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stop Watch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        light: {
+                            background: '#FAFAF8',
+                            text: '#333333',
+                            secondary: '#555555',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .time-transition {
+            transition: all 0.3s ease;
+        }
+        .glow {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body class="font-sans bg-light-background text-light-text min-h-screen">
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-screen">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold mb-2">Stop Watch</h1>
+            <p class="text-light-secondary text-lg">Precision timing at your fingertips</p>
+        </header>
+
+        <main class="w-full max-w-md">
+            <!-- Time Display -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border-4 border-gray-100">
+                <div class="text-center">
+                    <div id="time" class="text-6xl md:text-7xl font-mono font-bold mb-4 time-transition text-gray-800">
+                        00:00
+                    </div>
+                    <div class="text-light-secondary text-sm">
+                        <span id="milliseconds" class="font-mono">000</span> ms
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="grid grid-cols-3 gap-4">
+                    <button 
+                        id="startBtn"
+                        onclick="startClock()" 
+                        class="py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center"
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Start
+                    </button>
+                    
+                    <button 
+                        id="stopBtn"
+                        onclick="stopClock()" 
+                        class="py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center opacity-50 cursor-not-allowed"
+                        disabled
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+                        </svg>
+                        Stop
+                    </button>
+                    
+                    <button 
+                        id="resetBtn"
+                        onclick="resetClock()" 
+                        class="py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center"
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lap Times -->
+            <div id="lapSection" class="bg-white rounded-xl shadow-lg p-6 hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Lap Times</h2>
+                    <button 
+                        onclick="clearLaps()" 
+                        class="text-red-500 hover:text-red-700 text-sm font-medium transition-colors"
+                    >
+                        Clear All
+                    </button>
+                </div>
+                <div id="lapTimes" class="space-y-2 max-h-64 overflow-y-auto"></div>
+            </div>
+
+            <!-- Additional Controls -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-center space-x-4">
+                    <button 
+                        id="lapBtn"
+                        onclick="recordLap()" 
+                        class="px-6 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded-lg transition-all opacity-50 cursor-not-allowed"
+                        disabled
+                    >
+                        Record Lap
+                    </button>
+                    
+                    <div class="flex items-center space-x-2">
+                        <span class="text-light-secondary text-sm">Theme:</span>
+                        <button 
+                            onclick="toggleTheme()" 
+                            class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm transition-colors"
+                        >
+                            Dark
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="mt-12 text-center text-light-secondary">
+            <p>© 2025 • Developed by <a href="https://www.linkedin.com/in/suhaib-nadakkavil" target="_blank"
+                    class="text-light-secondary hover:text-light-text underline transition-colors">msn4u</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Variables
+        let secondElapsed = 0;
+        let milliseconds = 0;
+        let interval = null;
+        let isRunning = false;
+        let lapTimes = [];
+
+        // DOM Elements
+        const time = document.getElementById("time");
+        const millisecondsDisplay = document.getElementById("milliseconds");
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn = document.getElementById("stopBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const lapBtn = document.getElementById("lapBtn");
+        const lapSection = document.getElementById("lapSection");
+        const lapTimesContainer = document.getElementById("lapTimes");
+
+        // Utility Functions
+        function padStart(value) {
+            return String(value).padStart(2, "0");
+        }
+
+        function padMilliseconds(value) {
+            return String(value).padStart(3, "0");
+        }
+
+        // Time Functions
+        function setTime() {
+            const minutes = Math.floor(secondElapsed / 60);
+            const seconds = secondElapsed % 60;
+            time.innerHTML = `${padStart(minutes)}:${padStart(seconds)}`;
+            millisecondsDisplay.textContent = padMilliseconds(milliseconds);
+        }
+
+        function timer() {
+            milliseconds += 10;
+            if (milliseconds >= 1000) {
+                secondElapsed++;
+                milliseconds = 0;
+            }
+            setTime();
+        }
+
+        // Control Functions
+        function startClock() {
+            if (interval) return;
+            
+            interval = setInterval(timer, 10);
+            isRunning = true;
+            
+            // Update button states
+            startBtn.disabled = true;
+            startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            stopBtn.disabled = false;
+            stopBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            lapBtn.disabled = false;
+            lapBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            // Add visual feedback
+            time.classList.add('text-green-600', 'glow');
+            time.classList.remove('text-gray-800');
+        }
+
+        function stopClock() {
+            if (!interval) return;
+            
+            clearInterval(interval);
+            interval = null;
+            isRunning = false;
+            
+            // Update button states
+            startBtn.disabled = false;
+            startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            stopBtn.disabled = true;
+            stopBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            lapBtn.disabled = true;
+            lapBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            // Remove visual feedback
+            time.classList.remove('text-green-600', 'glow');
+            time.classList.add('text-gray-800');
+        }
+
+        function resetClock() {
+            stopClock();
+            secondElapsed = 0;
+            milliseconds = 0;
+            setTime();
+            clearLaps();
+        }
+
+        // Lap Functions
+        function recordLap() {
+            if (!isRunning) return;
+            
+            const lapTime = {
+                minutes: Math.floor(secondElapsed / 60),
+                seconds: secondElapsed % 60,
+                milliseconds: milliseconds,
+                total: secondElapsed * 1000 + milliseconds
+            };
+            
+            lapTimes.unshift(lapTime);
+            updateLapDisplay();
+            
+            // Show lap section if hidden
+            if (lapSection.classList.contains('hidden')) {
+                lapSection.classList.remove('hidden');
+            }
+            
+            // Visual feedback
+            lapBtn.classList.add('animate-pulse');
+            setTimeout(() => {
+                lapBtn.classList.remove('animate-pulse');
+            }, 300);
+        }
+
+        function updateLapDisplay() {
+            lapTimesContainer.innerHTML = '';
+            
+            lapTimes.forEach((lap, index) => {
+                const lapElement = document.createElement('div');
+                lapElement.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
+                
+                const lapNumber = document.createElement('span');
+                lapNumber.className = 'font-semibold text-light-secondary';
+                lapNumber.textContent = `Lap ${lapTimes.length - index}`;
+                
+                const lapTimeDisplay = document.createElement('span');
+                lapTimeDisplay.className = 'font-mono font-semibold';
+                lapTimeDisplay.textContent = `${padStart(lap.minutes)}:${padStart(lap.seconds)}.${padMilliseconds(lap.milliseconds)}`;
+                
+                lapElement.appendChild(lapNumber);
+                lapElement.appendChild(lapTimeDisplay);
+                lapTimesContainer.appendChild(lapElement);
+            });
+        }
+
+        function clearLaps() {
+            lapTimes = [];
+            lapTimesContainer.innerHTML = '';
+            lapSection.classList.add('hidden');
+        }
+
+        // Theme toggle (simple light/dark for this component)
+        function toggleTheme() {
+            document.body.classList.toggle('bg-gray-900');
+            document.body.classList.toggle('text-white');
+            
+            const cards = document.querySelectorAll('.bg-white');
+            cards.forEach(card => {
+                card.classList.toggle('bg-white');
+                card.classList.toggle('bg-gray-800');
+                card.classList.toggle('text-light-text');
+                card.classList.toggle('text-white');
+            });
+            
+            const borders = document.querySelectorAll('.border-gray-100');
+            borders.forEach(border => {
+                border.classList.toggle('border-gray-100');
+                border.classList.toggle('border-gray-700');
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (isRunning) {
+                    stopClock();
+                } else {
+                    startClock();
+                }
+            } else if (e.code === 'KeyL' && isRunning) {
+                recordLap();
+            } else if (e.code === 'KeyR') {
+                resetClock();
+            }
+        });
+
+        // Initialize
+        setTime();
+    </script>
+</body>
+</html>
